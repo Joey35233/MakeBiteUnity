@@ -12,7 +12,7 @@ namespace UnityMakeBite
         {
             if (dataType == "Fmdl Studio V2")
             {
-                FmdlExporter(string path)
+                FmdlExporter.FMDLWrite(filepath);
             }
             else
             {
