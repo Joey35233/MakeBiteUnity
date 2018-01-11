@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using SnakeBite;
 
 namespace UnityMakeBite
 {
     public class MakeBiteWindow : EditorWindow
     {
-        private MakeBiteMod makeBiteMod = new MakeBiteMod();
+        private ModEntry modEntry = new ModEntry();
 
         string[] gameVersionList = new string[1] { "1.0.12" };
         int gameVersonIndex = 0;
@@ -15,7 +16,16 @@ namespace UnityMakeBite
         int dataTypeIndex = 0;
         string dataType;
 
-        string filepath;
+        string[] fmdlList = new string[1] { "Venom - Fatigues" };
+        string[] fmdlPathList = new string[1] { "/Assets/tpp/pack/player/parts/normal_venom/assets/tpp/pack/chara/sna/sna0_main0_def.fmdl" };
+        int fmdlIndex = 0;
+
+        bool usePreset = true;
+
+        string modFilepath;
+        string fmdlFilepath;
+
+        bool usePack = true;
 
         [MenuItem("MakeBite/Pack")]
         private static void ShowWindow()
@@ -31,18 +41,7 @@ namespace UnityMakeBite
 
             EditorGUILayout.BeginHorizontal();
             dataTypeIndex = EditorGUILayout.Popup("Tool", dataTypeIndex, dataTypeList);
-
-            if (dataTypeIndex == 0)
-            {
-                dataType = dataTypeList[dataTypeIndex];
-            }
-
-            else
-            {
-                dataTypeIndex = 0;
-                UnityEngine.Debug.Log("Fox Kit does not yet support exporting. Switching to Fmdl Studio V2...");
-            }
-
+            dataType = dataTypeList[dataTypeIndex];
             EditorGUILayout.EndHorizontal();
 
             GUILayout.Label("Mod Information", EditorStyles.boldLabel);
@@ -50,28 +49,28 @@ namespace UnityMakeBite
             EditorGUILayout.Space();
 
             EditorGUILayout.BeginHorizontal();
-            makeBiteMod.modName = EditorGUILayout.DelayedTextField("Mod Name", makeBiteMod.modName);
+            modEntry.Name = EditorGUILayout.DelayedTextField("Mod Name", modEntry.Name);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
-            makeBiteMod.modAuthor = EditorGUILayout.TextField("Mod Author", makeBiteMod.modAuthor);
+            modEntry.Author = EditorGUILayout.TextField("Mod Author", modEntry.Author);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
-            makeBiteMod.modVersion = EditorGUILayout.TextField("Mod Version", makeBiteMod.modVersion);
+            modEntry.Version = EditorGUILayout.TextField("Mod Version", modEntry.Version);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
             gameVersonIndex = EditorGUILayout.Popup("Game Version", gameVersonIndex, gameVersionList);
-            makeBiteMod.modGameVersion = gameVersionList[gameVersonIndex];
+            modEntry.MGSVersion.Version = gameVersionList[gameVersonIndex];
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
-            makeBiteMod.modAuthorWebsite = EditorGUILayout.TextField("Author's Website", makeBiteMod.modAuthorWebsite);
+            modEntry.Website = EditorGUILayout.TextField("Author's Website", modEntry.Website);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
-            makeBiteMod.modDescription = EditorGUILayout.TextField("Mod Description", makeBiteMod.modDescription);
+            modEntry.Description = EditorGUILayout.TextField("Mod Description", modEntry.Description);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space();
@@ -80,25 +79,67 @@ namespace UnityMakeBite
 
             EditorGUILayout.Space();
 
-            if (GUILayout.Button("Filepath"))
+            switch (dataType)
             {
-                filepath = EditorUtility.OpenFolderPanel("Choose asset path", @"", "");
+                case "Fmdl Studio V2":
+                    if (GUILayout.Button("Filepath"))
+                    {
+                        modFilepath = EditorUtility.OpenFolderPanel("Choose asset path", @"", "");
+                    }
+
+                    EditorGUILayout.BeginHorizontal();
+                    modFilepath = EditorGUILayout.TextField(modFilepath);
+                    EditorGUILayout.EndHorizontal();
+
+                    EditorGUILayout.Space();
+
+                    EditorGUILayout.BeginHorizontal();
+                    usePreset = EditorGUILayout.Toggle("Use Preset", usePreset);
+
+                    using (new EditorGUI.DisabledScope(usePreset == false))
+                    {
+                        fmdlIndex = EditorGUILayout.Popup(fmdlIndex, fmdlList);
+                        fmdlFilepath = fmdlPathList[fmdlIndex];
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    EditorGUILayout.BeginHorizontal();
+                    using (new EditorGUI.DisabledScope(usePreset == true))
+                    {
+                        fmdlFilepath = EditorGUILayout.TextField(fmdlFilepath);
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    usePack = true;
+                    break;
+
+                case "FoxKit":
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Label("FoxKit not yet supported");
+                    EditorGUILayout.EndHorizontal();
+
+                    usePack = false;
+                    break;
+                default:
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Label("Tool type not selected");
+                    EditorGUILayout.EndHorizontal();
+
+                    usePack = false;
+                    break;
             }
 
-            EditorGUILayout.BeginHorizontal();
-            filepath = EditorGUILayout.TextField(filepath);
-            EditorGUILayout.EndHorizontal();
-
-            //EditorGUILayout.BeginHorizontal();
-            //makeBiteMod.modFolder = EditorGUILayout.TextField("Mod Folder", makeBiteMod.modFolder);
-            //EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.Space();
-
-            if (GUILayout.Button("Pack .mgsv"))
+            using (new EditorGUI.DisabledScope(usePack == false))
             {
-                string mgsvPath = EditorUtility.SaveFilePanel("Choose .mgsv save location", filepath, makeBiteMod.modName, "mgsv");
-                MGSVExporter.ExportMGSV(filepath, dataType, makeBiteMod);
+                EditorGUILayout.Space();
+
+                if (GUILayout.Button("Pack .mgsv"))
+                {
+                    string buildPath = EditorUtility.SaveFilePanel("Choose .mgsv save location", modFilepath, modEntry.Name, "mgsv");
+                    const string prebuildPath = @"\PreBuild";
+
+                    MGSVWriter.WriteMGSV(modFilepath, dataType, prebuildPath, buildPath, modEntry);
+                }
             }
         }
     }

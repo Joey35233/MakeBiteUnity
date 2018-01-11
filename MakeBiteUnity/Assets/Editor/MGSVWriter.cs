@@ -1,22 +1,28 @@
 ﻿using System;
 using System.IO;
 using System.Xml;
-using FmdlStudio;
+using makebite;
+using SnakeBite;
+//using FmdlStudio;
 
 namespace UnityMakeBite
 {
-    static class MGSVExporter
+    public static class MGSVWriter
     {
         //The dataType string is temporary. Once FoxKit is in a state to be able to export data, this will be refactored to support that.
-        public static void ExportMGSV(string filepath, string dataType, MakeBiteMod makeBiteMod)
+        public static void WriteMGSV(string modFilepath, string dataType, string prebuildPath, string buildPath, ModEntry modEntry)
         {
-            if (dataType == "Fmdl Studio V2")
+            switch (dataType)
             {
-                FmdlExporter.FMDLWrite(filepath);
-            }
-            else
-            {
-                UnityEngine.Debug.Log("How did you get here?");
+                case "Fmdl Studio V2":
+                    Build.BuildArchive(prebuildPath, modEntry, buildPath);
+                    break;
+                case "FoxKit":
+                    UnityEngine.Debug.Log("Error: FoxKit not yet supported.");
+                    break;
+                default:
+                    UnityEngine.Debug.Log("Error: Invalid tool type selected");
+                break;
             }
         }
     }
